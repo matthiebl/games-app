@@ -2,7 +2,7 @@ import React from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 
 import { onAuthStateChanged } from 'firebase/auth'
-import { anonLogin, auth, getUserDetails } from './api'
+import { anonLogin, auth } from './api'
 
 import { TestPage } from './pages/TestPage'
 
@@ -12,10 +12,10 @@ const App = () => {
             if (user) {
                 const uid = user.uid
                 console.info('[AUTH] User is logged in with id', uid, user)
-                getUserDetails(uid)
+                // getUserDetails(uid)
             } else {
                 console.info('[AUTH] No user logged in - creating anonymous user')
-                anonLogin(() => {})
+                anonLogin()
             }
         })
     }, [])

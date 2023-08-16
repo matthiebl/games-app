@@ -10,7 +10,6 @@ export type Game = {}
 export type UserData = {
     uid: UserID
     name: string
-    anon: boolean
     wins: number
     games: Game[]
 }
@@ -31,11 +30,11 @@ export const signUserOut = () => {
         })
 }
 
-export const anonLogin = (callback: (user: UserData) => any) => {
+export const anonLogin = () => {
     signInAnonymously(auth)
-        .then(cred => {
-            const uid = cred.user.uid
-            createUserDetails(uid, 'Anon', true, callback)
+        .then(() => {
+            // const uid = cred.user.uid
+            // createUserDetails(uid, 'Anon', true, callback)
         })
         .catch(error => {
             const errorCode = error.code
@@ -44,11 +43,10 @@ export const anonLogin = (callback: (user: UserData) => any) => {
         })
 }
 
-export const createUserDetails = (uid: UserID, name: string, anon: boolean, callback: (user: UserData) => any) => {
+export const createUserDetails = (uid: UserID, name: string, callback: (user: UserData) => any) => {
     const game = {
         uid,
         name,
-        anon,
         wins: 0,
         games: [],
     }
@@ -65,11 +63,8 @@ export const createUserDetails = (uid: UserID, name: string, anon: boolean, call
 
 export const getUserDetails = (uid: UserID) => {
     onSnapshot(doc(database, 'users', uid), data => {
-        console.log('Data', data)
         if (data.exists()) {
-            console.log(data.data())
         } else {
-            console.error('[DB] No user data for user with id', uid)
         }
     })
 }
