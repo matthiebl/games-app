@@ -10,6 +10,7 @@ export type Game = {}
 export type UserData = {
     uid: UserID
     name: string
+    isAnonymous: boolean
     wins: number
     games: Game[]
 }
@@ -47,6 +48,7 @@ export const createUserDetails = (uid: UserID, name: string, callback: (user: Us
     const game = {
         uid,
         name,
+        isAnonymous: false,
         wins: 0,
         games: [],
     }
@@ -61,9 +63,17 @@ export const createUserDetails = (uid: UserID, name: string, callback: (user: Us
         })
 }
 
-export const getUserDetails = (uid: UserID) => {
-    onSnapshot(doc(database, 'users', uid), data => {
-        if (data.exists()) {
+export const getUserDetails = (uid: UserID, callback: (user: UserData) => any) => {
+    onSnapshot(doc(database, 'users', uid), doc => {
+        if (doc.exists()) {
+            const data = doc.data()
+            callback({
+                uid,
+                name: data.name,
+                isAnonymous: data.isAnonymous,
+                wins: data.wins,
+                games: data.games,
+            })
         } else {
         }
     })
