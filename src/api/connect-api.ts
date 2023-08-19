@@ -158,6 +158,13 @@ const checkTie = (board: ConnectBoard): boolean => {
 
 export const connectGameMessage = (game: ConnectGame, player: ConnectPiece | ''): string => {
     if (player === '') {
+        if (game.winner === '1') {
+            return 'PLAYER 1 WON'
+        } else if (game.winner === '2') {
+            return 'PLAYER 2 WON'
+        } else if (game.winner === 'T') {
+            return 'TIE'
+        }
         return 'SPECTATING'
     } else if (game.winner === 'T') {
         return 'TIE'

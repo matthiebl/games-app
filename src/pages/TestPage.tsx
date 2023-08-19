@@ -18,10 +18,9 @@ export const TestPage: React.FC<TestPageProps> = ({}) => {
     }, [])
 
     return (
-        <div className='w-full h-full flex gap-2 flex-col justify-center items-center'>
-            <button className='py-2 px-4 border rounded' disabled={loading} onClick={() => signUserOut()}>
-                Log Out
-            </button>
+        <div className='w-full h-full flex flex-col items-center'>
+            <header className='flex items-center justify-center bg-green-500'>Header</header>
+            <div className='w-[80vh] max-w-screen aspect-square max-h-[80vh] mx-0 my-auto flex-1 overflow-auto bg-red-500'></div>
         </div>
     )
 }
