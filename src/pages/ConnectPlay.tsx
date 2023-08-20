@@ -10,7 +10,7 @@ import {
     joinAsSecondPlayerToConnectGame,
     placeConnectPiece,
 } from '../api'
-import { Button, Page } from '../components'
+import { Button, Page, classNames } from '../components'
 
 interface ConnectPlayProps {
     user: UserData | null
@@ -58,7 +58,7 @@ export const ConnectPlay: React.FC<ConnectPlayProps> = ({ user }) => {
                     text: `${user.name} is inviting you to play Connect 4!`,
                     url: window.location.href,
                 })
-                .catch(copyLink)
+                .catch(() => copyLink())
         } catch {
             copyLink()
         }
@@ -131,9 +131,11 @@ const Board: React.FC<BoardProps> = ({ player, game, placePiece }) => {
                     {column.split('').map(piece => (
                         <div
                             key={crypto.randomUUID()}
-                            className={
-                                'w-full aspect-square rounded-full ' + (piece === '1' ? 'bg-red-500' : 'bg-yellow-500')
-                            }
+                            className={classNames(
+                                'w-full aspect-square rounded-full',
+                                piece === '1' ? 'bg-red-500' : 'bg-yellow-500',
+                                columnIndex === game.lastColumn ? 'last:animate-fall' : '',
+                            )}
                         />
                     ))}
                 </button>

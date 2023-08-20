@@ -7,6 +7,7 @@ export type ConnectGame = {
     player2: UserID
     player2Name: string
     board: ConnectBoard
+    lastColumn: number
     turn: ConnectPiece
     winner: ConnectPiece | '' | 'T'
 }
@@ -37,6 +38,7 @@ export const getConnectGame = (gid: GameID, callback: (game: ConnectGame) => any
                 player2: data.player2,
                 player2Name: data.player2Name,
                 board: board.map((s: string) => parseConnectColumn(s)),
+                lastColumn: data.lastColumn,
                 turn: data.turn,
                 winner: data.winner,
             })
@@ -53,6 +55,7 @@ export const createConnectGame = (uid: UserID, name: string, callback: (id: Game
         player2: '',
         player2Name: '',
         board: ['', '', '', '', '', '', ''],
+        lastColumn: -1,
         turn: '1',
         winner: '',
     })
@@ -87,6 +90,7 @@ export const placeConnectPiece = (gid: GameID, board: ConnectBoard, player: Conn
 
     updateDoc(doc(database, 'connect', gid), {
         board: newBoard,
+        lastColumn: column,
         turn: player === '1' ? '2' : '1',
         winner,
     }).catch(error => {

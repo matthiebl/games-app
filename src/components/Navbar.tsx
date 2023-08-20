@@ -6,7 +6,7 @@ interface NavbarProps {}
 export const Navbar: React.FC<NavbarProps> = ({}) => {
     const [gameMenu, setGameMenu] = React.useState(false)
     return (
-        <nav className='h-14 min-h-[56px] border-b px-4 items-center flex justify-between'>
+        <nav className='h-14 min-h-[56px] border-b bg-white px-4 items-center flex justify-between z-40'>
             <div className='flex items-end gap-4'>
                 <button onClick={() => setGameMenu(!gameMenu)} className='px-1 flex items-center gap-2 sm:hidden'>
                     <h2 className='text-xl font-bold'>Games</h2>
