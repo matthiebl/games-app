@@ -134,7 +134,9 @@ const Board: React.FC<BoardProps> = ({ player, game, placePiece }) => {
                             className={classNames(
                                 'w-full aspect-square rounded-full',
                                 piece === '1' ? 'bg-red-500' : 'bg-yellow-500',
-                                columnIndex === game.lastColumn ? 'last:animate-fall' : '',
+                                columnIndex === game.lastColumn
+                                    ? 'last:animate-fall last:motion-safe:animate-fall last:motion-reduce:animate-none'
+                                    : '',
                             )}
                         />
                     ))}
