@@ -79,7 +79,7 @@ export const ConnectPlay: React.FC<ConnectPlayProps> = ({}) => {
         ) {
             return
         }
-        placeConnectPiece(gid, game.board, game.turn, column)
+        placeConnectPiece(user, gid, game.board, game.turn, column)
     }
 
     const GameBoard = game === null ? EmptyBoard : Board

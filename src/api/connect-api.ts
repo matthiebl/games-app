@@ -1,5 +1,5 @@
 import { addDoc, collection, doc, onSnapshot, updateDoc } from 'firebase/firestore'
-import { GameID, UserID, database } from '.'
+import { GameID, UserData, UserID, addGame, addGameWin, database } from '.'
 
 export type ConnectGame = {
     player1: UserID
@@ -72,6 +72,7 @@ export const createConnectGame = (uid: UserID, name: string, callback: (id: Game
     })
         .then(doc => {
             console.info('[CONNECT] Connect game created with id', doc.id)
+            addGame(uid, 'connect', doc.id)
             callback(doc.id)
         })
         .catch(error => {
@@ -86,7 +87,7 @@ export const joinAsSecondPlayerToConnectGame = (gid: GameID, uid: UserID, name: 
         player2: uid,
         player2Name: name,
     })
-        // .then(() => console.log('Added as 2nd player', uid))
+        .then(() => addGame(uid, 'connect', gid))
         .catch(error => {
             const errorCode = error.code
             const errorMessage = error.message
@@ -94,10 +95,20 @@ export const joinAsSecondPlayerToConnectGame = (gid: GameID, uid: UserID, name: 
         })
 }
 
-export const placeConnectPiece = (gid: GameID, board: ConnectBoard, player: ConnectPiece, column: number) => {
+export const placeConnectPiece = (
+    user: UserData,
+    gid: GameID,
+    board: ConnectBoard,
+    player: ConnectPiece,
+    column: number,
+) => {
     const newBoard = board
     newBoard[column] = parseConnectColumn(board[column] + player)
     const winner = checkWinner(newBoard, player) ? player : checkTie(newBoard) ? 'T' : ''
+
+    if (winner === player) {
+        addGameWin(user)
+    }
 
     updateDoc(doc(database, 'connect', gid), {
         board: newBoard,

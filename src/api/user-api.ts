@@ -1,11 +1,14 @@
-import { auth, database } from '.'
+import { GameDB, auth, database } from '.'
 import { signInAnonymously, signOut } from 'firebase/auth'
-import { deleteDoc, doc, onSnapshot, setDoc, updateDoc } from 'firebase/firestore'
+import { deleteDoc, doc, onSnapshot, runTransaction, setDoc, updateDoc } from 'firebase/firestore'
 
 export type UserID = string
 export type GameID = string
 
-export type Game = {}
+export type Game = {
+    game: GameDB
+    id: GameID
+}
 
 export type UserData = {
     uid: UserID
@@ -90,6 +93,36 @@ export const deleteUserDetails = (uid: UserID) => {
             const errorMessage = error.message
             console.error('[DB] Deleting user details failed with code', errorCode, errorMessage)
         })
+}
+
+export const addGame = (uid: UserID, type: GameDB, gid: GameID) => {
+    const userRef = doc(database, 'users', uid)
+    const newGame: Game = {
+        game: type,
+        id: gid,
+    }
+
+    try {
+        runTransaction(database, async transaction => {
+            const doc = await transaction.get(userRef)
+            if (doc.exists()) {
+                const data = doc.data()
+                transaction.update(userRef, { games: [...data.games, newGame] })
+            }
+        })
+    } catch (e) {
+        console.error('[DB] Adding game to user failed', e)
+    }
+}
+
+export const addGameWin = (user: UserData) => {
+    updateDoc(doc(database, 'users', user.uid), {
+        wins: user.wins + 1,
+    }).catch(error => {
+        const errorCode = error.code
+        const errorMessage = error.message
+        console.error('[DB] Updating user wins failed with code', errorCode, errorMessage)
+    })
 }
 
 export const updateUserName = (uid: UserID, name: string) => {
