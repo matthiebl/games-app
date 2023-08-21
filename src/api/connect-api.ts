@@ -6,18 +6,25 @@ export type ConnectGame = {
     player1Name: string
     player2: UserID
     player2Name: string
+
     board: ConnectBoard
     lastColumn: number
     turn: ConnectPiece
     winner: ConnectPiece | '' | 'T'
+
+    challenge: {
+        player: ConnectPiece
+        code: string
+    } | null
+    accepted: boolean
 }
 
 type Opaque<K, T> = T & { __TYPE__: K }
 type ConnectColumn = Opaque<string, 'ConnectColumn'>
 
 const parseConnectColumn = (str: string): ConnectColumn => {
-    const col = str.substring(0, 7)
-    if (!/^[1|2]{0,7}$/.test(col)) {
+    const col = str.substring(0, 6)
+    if (!/^[1|2]{0,6}$/.test(col)) {
         console.error(`[GAME] Connect column was malformed: "${str}". Emptying column`)
         return '' as ConnectColumn
     }
@@ -41,6 +48,8 @@ export const getConnectGame = (gid: GameID, callback: (game: ConnectGame) => any
                 lastColumn: data.lastColumn,
                 turn: data.turn,
                 winner: data.winner,
+                challenge: data.challenge,
+                accepted: data.accepted,
             })
         } else {
             console.warn('[CONNECT] No game of connect with id', gid)
@@ -58,6 +67,8 @@ export const createConnectGame = (uid: UserID, name: string, callback: (id: Game
         lastColumn: -1,
         turn: '1',
         winner: '',
+        challenge: null,
+        accepted: false,
     })
         .then(doc => {
             console.info('[CONNECT] Connect game created with id', doc.id)
@@ -100,10 +111,45 @@ export const placeConnectPiece = (gid: GameID, board: ConnectBoard, player: Conn
     })
 }
 
+export const sendConnectChallengeInvite = (
+    gid: GameID,
+    uid: UserID,
+    name: string,
+    senderPlayer: ConnectPiece,
+    callback: (id: GameID) => any,
+) => {
+    createConnectGame(uid, name, newGid => {
+        updateDoc(doc(database, 'connect', gid), {
+            challenge: {
+                player: senderPlayer === '1' ? '2' : '1',
+                code: newGid,
+            },
+        })
+            .then(() => callback(newGid))
+            .catch(error => {
+                const errorCode = error.code
+                const errorMessage = error.message
+                console.error('[CONNECT] Invite update failed with code', errorCode, errorMessage)
+            })
+    })
+}
+
+export const acceptConnectChallenge = (gid: GameID, callback: () => any) => {
+    updateDoc(doc(database, 'connect', gid), {
+        accepted: true,
+    })
+        .then(() => callback())
+        .catch(error => {
+            const errorCode = error.code
+            const errorMessage = error.message
+            console.error('[CONNECT] Accepting invite failed with code', errorCode, errorMessage)
+        })
+}
+
 const checkWinner = (board: ConnectBoard, player: ConnectPiece): boolean => {
     // Check verticals
     for (let i = 0; i < 7; i++) {
-        for (let j = 0; j < 4; j++) {
+        for (let j = 0; j < 3; j++) {
             if (
                 board[i][j] === player &&
                 board[i][j + 1] === player &&
@@ -116,7 +162,7 @@ const checkWinner = (board: ConnectBoard, player: ConnectPiece): boolean => {
     }
     // Check horizontals
     for (let i = 0; i < 4; i++) {
-        for (let j = 0; j < 7; j++) {
+        for (let j = 0; j < 6; j++) {
             if (
                 board[i][j] === player &&
                 board[i + 1][j] === player &&
@@ -129,7 +175,7 @@ const checkWinner = (board: ConnectBoard, player: ConnectPiece): boolean => {
     }
     // Check diagonal up right
     for (let i = 0; i < 4; i++) {
-        for (let j = 0; j < 4; j++) {
+        for (let j = 0; j < 3; j++) {
             if (
                 board[i][j] === player &&
                 board[i + 1][j + 1] === player &&
@@ -142,7 +188,7 @@ const checkWinner = (board: ConnectBoard, player: ConnectPiece): boolean => {
     }
     // Check diagonal down right
     for (let i = 3; i < 7; i++) {
-        for (let j = 0; j < 4; j++) {
+        for (let j = 0; j < 3; j++) {
             if (
                 board[i][j] === player &&
                 board[i - 1][j + 1] === player &&

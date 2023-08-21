@@ -1,5 +1,5 @@
 import React from 'react'
-import { Button, LoadingIcon, Page } from '../components'
+import { Button, Card, LoadingIcon, Page } from '../components'
 import { createConnectGame } from '../api'
 import { useNavigate } from 'react-router-dom'
 import { UserContext } from '../context'
@@ -30,7 +30,7 @@ export const ConnectHome: React.FC<ConnectHomeProps> = ({}) => {
             <div className='w-full max-w-4xl h-full p-5 flex-col gap-5 flex'>
                 <h1 className='text-3xl font-extrabold'>Play Connect 4</h1>
 
-                <div className='border bg-white shadow-lg rounded-lg p-5 gap-5'>
+                <Card className='gap-5'>
                     <h2 className='text-xl mb-2'>Join a friend's game!</h2>
                     <form className='grid-cols-4 grid gap-4 items-center' onSubmit={e => e.preventDefault()}>
                         <input
@@ -50,7 +50,7 @@ export const ConnectHome: React.FC<ConnectHomeProps> = ({}) => {
                             JOIN
                         </Button>
                     </form>
-                </div>
+                </Card>
 
                 <span className='text-center'>or</span>
 
