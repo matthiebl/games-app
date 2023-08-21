@@ -76,6 +76,9 @@ export const Profile: React.FC<ProfileProps> = ({}) => {
                         )}
                     </div>
                 </Card>
+                {user !== null && (
+                    <span className='absolute bottom-5 text-xs text-gray-500'>Unique ID: {user.uid}</span>
+                )}
             </div>
         </Page>
     )
