@@ -1,14 +1,14 @@
 import React from 'react'
 import { Button, LoadingIcon, Page } from '../components'
-import { UserData, createConnectGame } from '../api'
+import { createConnectGame } from '../api'
 import { useNavigate } from 'react-router-dom'
+import { UserContext } from '../context'
 
-interface ConnectHomeProps {
-    user: UserData | null
-}
+interface ConnectHomeProps {}
 
-export const ConnectHome: React.FC<ConnectHomeProps> = ({ user }) => {
+export const ConnectHome: React.FC<ConnectHomeProps> = ({}) => {
     const navigate = useNavigate()
+    const { user } = React.useContext(UserContext)
 
     const [code, setCode] = React.useState<string>('')
     const [host, setHost] = React.useState<boolean>(false)

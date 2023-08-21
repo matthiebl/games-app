@@ -1,13 +1,19 @@
 import React from 'react'
-import { Page } from '../components'
+import { Button, Page } from '../components'
+import { useNavigate } from 'react-router-dom'
 
 interface HomeProps {}
 
 export const Home: React.FC<HomeProps> = ({}) => {
+    const navigate = useNavigate()
+
     return (
-        <Page>
-            <div className='w-full h-full p-5'>
+        <Page centered>
+            <div className='w-full max-w-4xl h-full p-5 flex-col gap-5 flex'>
                 <h1 className='text-3xl text-center font-extrabold'>Home</h1>
+                <Button onClick={() => navigate('/play/connect')} className='bg-sky-500 text-white'>
+                    Play Connect 4
+                </Button>
             </div>
         </Page>
     )

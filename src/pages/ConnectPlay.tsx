@@ -4,20 +4,20 @@ import { useParams } from 'react-router-dom'
 import {
     ConnectGame,
     ConnectPiece,
-    UserData,
     connectGameMessage,
     getConnectGame,
     joinAsSecondPlayerToConnectGame,
     placeConnectPiece,
 } from '../api'
 import { Button, Page, classNames } from '../components'
+import { UserContext } from '../context'
 
-interface ConnectPlayProps {
-    user: UserData | null
-}
+interface ConnectPlayProps {}
 
-export const ConnectPlay: React.FC<ConnectPlayProps> = ({ user }) => {
+export const ConnectPlay: React.FC<ConnectPlayProps> = ({}) => {
     const { gid } = useParams()
+    const { user } = React.useContext(UserContext)
+
     const [player, setPlayer] = React.useState<ConnectPiece | ''>('')
     const [game, setGame] = React.useState<ConnectGame | null>(null)
 
@@ -89,7 +89,7 @@ export const ConnectPlay: React.FC<ConnectPlayProps> = ({ user }) => {
                     <div className='relative max-w-xl w-full h-full'>
                         <div
                             data-finish={game?.winner !== ''}
-                            className='hidden absolute w-full h-full data-[finish=true]:flex items-center justify-center text-4xl font-extrabold'
+                            className='hidden z-40 absolute w-full h-full data-[finish=true]:flex items-center justify-center text-4xl font-extrabold'
                         >
                             {game !== null && connectGameMessage(game, player)}
                         </div>
@@ -122,6 +122,7 @@ const Board: React.FC<BoardProps> = ({ player, game, placePiece }) => {
                     disabled={
                         game === null ||
                         game.turn !== player ||
+                        game.player2 === '' ||
                         game.winner !== '' ||
                         game.board[columnIndex].length >= 7
                     }
