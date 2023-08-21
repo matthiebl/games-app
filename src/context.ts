@@ -1,12 +1,14 @@
 import React from 'react'
-import { UserID } from './api'
+import { UserData } from './api'
 
 export type ContextT = {
-    currentUser: UserID | null
+    user: UserData | null
+    setUser: React.Dispatch<React.SetStateAction<UserData | null>>
 }
 
 const defaultUserContext: ContextT = {
-    currentUser: null,
+    user: null,
+    setUser: () => {},
 }
 
 export const UserContext = React.createContext<ContextT>(defaultUserContext)
