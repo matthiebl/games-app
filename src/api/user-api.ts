@@ -1,6 +1,6 @@
 import { auth, database } from '.'
 import { signInAnonymously, signOut } from 'firebase/auth'
-import { deleteDoc, doc, onSnapshot, setDoc } from 'firebase/firestore'
+import { deleteDoc, doc, onSnapshot, setDoc, updateDoc } from 'firebase/firestore'
 
 export type UserID = string
 export type GameID = string
@@ -33,9 +33,9 @@ export const signUserOut = () => {
 
 export const anonLogin = () => {
     signInAnonymously(auth)
-        .then(() => {
-            // const uid = cred.user.uid
-            // createUserDetails(uid, 'Anon', true, callback)
+        .then(cred => {
+            const uid = cred.user.uid
+            createUserDetails(uid, 'Anonymous', true, () => {})
         })
         .catch(error => {
             const errorCode = error.code
@@ -44,17 +44,17 @@ export const anonLogin = () => {
         })
 }
 
-export const createUserDetails = (uid: UserID, name: string, callback: (user: UserData) => any) => {
-    const game = {
+export const createUserDetails = (uid: UserID, name: string, anon: boolean, callback: (user: UserData) => any) => {
+    const user = {
         uid,
         name,
-        isAnonymous: false,
+        isAnonymous: anon,
         wins: 0,
         games: [],
     }
-    setDoc(doc(database, 'users', uid), game)
+    setDoc(doc(database, 'users', uid), user)
         .then(() => {
-            callback(game)
+            callback(user)
         })
         .catch(error => {
             const errorCode = error.code
@@ -75,6 +75,7 @@ export const getUserDetails = (uid: UserID, callback: (user: UserData) => any) =
                 games: data.games,
             })
         } else {
+            console.warn('[DB] Retrieving user details failed for', uid)
         }
     })
 }
@@ -89,4 +90,14 @@ export const deleteUserDetails = (uid: UserID) => {
             const errorMessage = error.message
             console.error('[DB] Deleting user details failed with code', errorCode, errorMessage)
         })
+}
+
+export const updateUserName = (uid: UserID, name: string) => {
+    updateDoc(doc(database, 'users', uid), {
+        name,
+    }).catch(error => {
+        const errorCode = error.code
+        const errorMessage = error.message
+        console.error('[DB] Updating user name failed with code', errorCode, errorMessage)
+    })
 }

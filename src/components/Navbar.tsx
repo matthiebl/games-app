@@ -1,5 +1,5 @@
 import React from 'react'
-import { ALink, DownArrowIcon } from '.'
+import { ALink, HamburgerIcon } from '.'
 import { UserContext } from '../context'
 
 interface NavbarProps {}
@@ -14,8 +14,8 @@ export const Navbar: React.FC<NavbarProps> = ({}) => {
         <nav className='h-14 min-h-[56px] border-b bg-white px-4 items-center flex justify-between z-40'>
             <div className='flex items-end gap-4'>
                 <button onClick={() => setGameMenu(!gameMenu)} className='px-1 flex items-center gap-2 sm:hidden'>
+                    <HamburgerIcon />
                     <h2 className='text-xl font-bold'>Games</h2>
-                    <DownArrowIcon />
                 </button>
                 <ALink href='/' className='px-1 items-center gap-2 hidden sm:flex'>
                     <h2 className='text-xl font-bold'>Games</h2>
@@ -27,9 +27,13 @@ export const Navbar: React.FC<NavbarProps> = ({}) => {
             <div
                 aria-hidden={!gameMenu}
                 aria-expanded={gameMenu}
-                className='fixed top-12 text-gray-700 border shadow rounded-md bg-white py-1 sm:hidden aria-hidden:hidden'
+                className='fixed top-12 flex flex-col text-gray-700 border shadow rounded-md bg-white py-1 sm:hidden aria-hidden:hidden'
             >
-                <ALink href='/play/connect' className='py-1 px-3 hover:bg-gray-100'>
+                <ALink href='/' className='py-1 px-3 hover:bg-gray-100 w-full'>
+                    Home
+                </ALink>
+                <div className='w-full border-t my-1' />
+                <ALink href='/play/connect' className='py-1 px-3 hover:bg-gray-100 w-full'>
                     Connect 4
                 </ALink>
             </div>
@@ -62,3 +66,29 @@ export const Navbar: React.FC<NavbarProps> = ({}) => {
         </nav>
     )
 }
+
+// type MenuItem = MenuItemLink | MenuItemText | MenuItemLine
+
+// type MenuItemLink = {
+//     type: 'link'
+//     text: string
+//     href: string
+// }
+
+// type MenuItemText = {
+//     type: 'text'
+//     text: string
+// }
+
+// type MenuItemLine = {
+//     type: 'line'
+// }
+
+// interface NavMenuProps {
+//     control: boolean
+//     items: MenuItem[]
+// }
+
+// export const NavMenu: React.FC<NavMenuProps> = ({ control, items }) => {
+//     return <div>Hello</div>
+// }

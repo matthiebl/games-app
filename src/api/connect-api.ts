@@ -75,7 +75,7 @@ export const joinAsSecondPlayerToConnectGame = (gid: GameID, uid: UserID, name: 
         player2: uid,
         player2Name: name,
     })
-        .then(() => console.log('Added as 2nd player', uid))
+        // .then(() => console.log('Added as 2nd player', uid))
         .catch(error => {
             const errorCode = error.code
             const errorMessage = error.message
