@@ -5,12 +5,12 @@ import {
     ConnectGame,
     ConnectPiece,
     GameID,
-    acceptConnectChallenge,
     connectGameMessage,
+    createConnectGame,
     getConnectGame,
     joinAsSecondPlayerToConnectGame,
     placeConnectPiece,
-    sendConnectChallengeInvite,
+    sendGameInvite,
 } from '../api'
 import { Button, Page, classNames } from '../components'
 import { UserContext } from '../context'
@@ -214,7 +214,7 @@ const InfoSection: React.FC<InfoSectionProps> = ({ gid, game, player, shareMessa
                     {game === null ? 'LOADING' : connectGameMessage(game, player)}
                 </div>
             </div>
-            {game !== null && game.winner !== '' && player !== '' && game.challenge === null && (
+            {game !== null && game.winner !== '' && player !== '' && (
                 <Button
                     onClick={() => {
                         if (gid === undefined || game === null) {
@@ -222,14 +222,19 @@ const InfoSection: React.FC<InfoSectionProps> = ({ gid, game, player, shareMessa
                         }
                         const uid = player === '1' ? game.player1 : game.player2
                         const name = player === '1' ? game.player1Name : game.player2Name
-                        sendConnectChallengeInvite(gid, uid, name, player, id => navigate(`/play/connect/${id}`))
+                        const opponent = player === '1' ? game.player2 : game.player1
+                        createConnectGame(uid, name, id => {
+                            sendGameInvite(opponent, 'connect', id)
+                            navigate(`/play/connect/${id}`)
+                        })
+                        // sendConnectChallengeInvite(gid, uid, name, player, id => navigate(`/play/connect/${id}`))
                     }}
                     className='bg-sky-500 text-white'
                 >
-                    Challenge Again
+                    Invite Opponent
                 </Button>
             )}
-            {game !== null && player !== '' && game.challenge !== null && game.accepted === false && (
+            {/* {game !== null && player !== '' && game.challenge !== null && game.accepted === false && (
                 <Button
                     onClick={() => {
                         if (game === null || game.challenge === null || gid === undefined) {
@@ -241,7 +246,7 @@ const InfoSection: React.FC<InfoSectionProps> = ({ gid, game, player, shareMessa
                 >
                     Accept Invite
                 </Button>
-            )}
+            )} */}
             <Button
                 onClick={shareGame}
                 disabled={game === null || game.winner !== ''}

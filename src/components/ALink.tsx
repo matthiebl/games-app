@@ -3,13 +3,16 @@ import { useNavigate } from 'react-router-dom'
 
 interface ALinkProps {
     href: string
+    onClick?: (ev: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => any
     className?: string
     children?: React.ReactNode
 }
 
-export const ALink: React.FC<ALinkProps> = ({ href, className = '', children }) => {
+export const ALink: React.FC<ALinkProps> = ({ href, onClick = () => {}, className = '', children }) => {
     const navigate = useNavigate()
     const goto = (ev: React.MouseEvent<HTMLAnchorElement, MouseEvent>, href: string) => {
+        onClick(ev)
+
         if (ev.metaKey) {
             return
         }

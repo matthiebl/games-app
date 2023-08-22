@@ -16,6 +16,7 @@ export type UserData = {
     isAnonymous: boolean
     wins: number
     games: Game[]
+    invites: Game[]
 }
 
 export const signUserOut = () => {
@@ -54,6 +55,7 @@ export const createUserDetails = (uid: UserID, name: string, anon: boolean, call
         isAnonymous: anon,
         wins: 0,
         games: [],
+        invites: [],
     }
     setDoc(doc(database, 'users', uid), user)
         .then(() => {
@@ -76,6 +78,7 @@ export const getUserDetails = (uid: UserID, callback: (user: UserData) => any) =
                 isAnonymous: data.isAnonymous,
                 wins: data.wins,
                 games: data.games,
+                invites: data.invites,
             })
         } else {
             console.warn('[DB] Retrieving user details failed for', uid)
@@ -133,4 +136,40 @@ export const updateUserName = (uid: UserID, name: string) => {
         const errorMessage = error.message
         console.error('[DB] Updating user name failed with code', errorCode, errorMessage)
     })
+}
+
+export const sendGameInvite = (uid: UserID, type: GameDB, gid: GameID) => {
+    const userRef = doc(database, 'users', uid)
+    const invite: Game = {
+        game: type,
+        id: gid,
+    }
+
+    try {
+        runTransaction(database, async transaction => {
+            const doc = await transaction.get(userRef)
+            if (doc.exists()) {
+                const data = doc.data()
+                transaction.update(userRef, { invites: [...data.invites, invite] })
+            }
+        })
+    } catch (e) {
+        console.error('[DB] Inviting to user failed', e)
+    }
+}
+
+export const acceptGameInvite = (uid: UserID, gid: GameID) => {
+    const userRef = doc(database, 'users', uid)
+
+    try {
+        runTransaction(database, async transaction => {
+            const doc = await transaction.get(userRef)
+            if (doc.exists()) {
+                const data = doc.data()
+                transaction.update(userRef, { invites: data.invites.filter((g: Game) => g.id !== gid) })
+            }
+        })
+    } catch (e) {
+        console.error('[DB] Inviting to user failed', e)
+    }
 }
