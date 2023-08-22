@@ -10,6 +10,7 @@ import { ConnectHome } from './pages/ConnectHome'
 import { ConnectPlay } from './pages/ConnectPlay'
 import { UserContext } from './context'
 import { Profile } from './pages/Profile'
+import { Stats } from './pages/Stats'
 
 const App = () => {
     const [userState, setUser] = React.useState<UserData | null>(null)
@@ -33,6 +34,7 @@ const App = () => {
                 <Routes>
                     <Route path='/' element={<Home />} />
                     <Route path='/profile' element={<Profile />} />
+                    <Route path='/profile/stats' element={<Stats />} />
                     <Route path='/play/connect' element={<ConnectHome />} />
                     <Route path='/play/connect/:gid' element={<ConnectPlay />} />
                     <Route path='/test' element={<TestPage />} />

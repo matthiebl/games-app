@@ -49,10 +49,13 @@ export const Navbar: React.FC<NavbarProps> = ({}) => {
             <div
                 aria-hidden={!userMenu}
                 aria-expanded={userMenu}
-                className='fixed top-12 right-4 flex flex-col text-gray-700 border shadow rounded-md text-right bg-white py-1 aria-hidden:hidden'
+                className='fixed top-12 right-4 flex flex-col text-gray-700 border shadow rounded-md bg-white py-1 aria-hidden:hidden'
             >
                 <ALink href='/profile' className='py-1 px-3 hover:bg-gray-100'>
                     Profile
+                </ALink>
+                <ALink href='/profile/stats' className='py-1 px-3 hover:bg-gray-100'>
+                    Stats
                 </ALink>
                 {user?.isAnonymous === false && (
                     <>

@@ -1,5 +1,5 @@
 import React from 'react'
-import { CancelIcon, Card, CheckIcon, Page, PencilIcon } from '../components'
+import { ALinkButton, CancelIcon, Card, CheckIcon, Page, PencilIcon } from '../components'
 import { UserContext } from '../context'
 import { updateUserName } from '../api'
 
@@ -76,6 +76,9 @@ export const Profile: React.FC<ProfileProps> = ({}) => {
                         )}
                     </div>
                 </Card>
+                <ALinkButton href='/profile/stats' className='bg-sky-500 text-white text-center'>
+                    Your Stats
+                </ALinkButton>
                 {user !== null && (
                     <span className='absolute bottom-5 text-xs text-gray-500'>Unique ID: {user.uid}</span>
                 )}
