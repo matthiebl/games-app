@@ -122,41 +122,6 @@ export const placeConnectPiece = (
     })
 }
 
-export const sendConnectChallengeInvite = (
-    gid: GameID,
-    uid: UserID,
-    name: string,
-    senderPlayer: ConnectPiece,
-    callback: (id: GameID) => any,
-) => {
-    createConnectGame(uid, name, newGid => {
-        updateDoc(doc(database, 'connect', gid), {
-            challenge: {
-                player: senderPlayer === '1' ? '2' : '1',
-                code: newGid,
-            },
-        })
-            .then(() => callback(newGid))
-            .catch(error => {
-                const errorCode = error.code
-                const errorMessage = error.message
-                console.error('[CONNECT] Invite update failed with code', errorCode, errorMessage)
-            })
-    })
-}
-
-export const acceptConnectChallenge = (gid: GameID, callback: () => any) => {
-    updateDoc(doc(database, 'connect', gid), {
-        accepted: true,
-    })
-        .then(() => callback())
-        .catch(error => {
-            const errorCode = error.code
-            const errorMessage = error.message
-            console.error('[CONNECT] Accepting invite failed with code', errorCode, errorMessage)
-        })
-}
-
 const checkWinner = (board: ConnectBoard, player: ConnectPiece): boolean => {
     // Check verticals
     for (let i = 0; i < 7; i++) {
@@ -230,7 +195,7 @@ export const connectGameMessage = (game: ConnectGame, player: ConnectPiece | '')
     } else if (game.winner === 'T') {
         return 'TIE'
     } else if (game.winner !== '' && player === game.winner) {
-        return `YOU WIN`
+        return `YOU WON`
     } else if (game.winner !== '' && player !== game.winner) {
         return `YOU LOST`
     } else if (game.player2 === '') {

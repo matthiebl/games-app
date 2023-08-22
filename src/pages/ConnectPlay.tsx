@@ -24,7 +24,7 @@ export const ConnectPlay: React.FC<ConnectPlayProps> = ({}) => {
     const [player, setPlayer] = React.useState<ConnectPiece | ''>('')
     const [game, setGame] = React.useState<ConnectGame | null>(null)
 
-    const [shareMessage, setShareMessage] = React.useState<string>('Invite')
+    const [shareMessage, setShareMessage] = React.useState<string>('Share Game')
 
     React.useEffect(() => {
         document.title = 'Games | Connect 4'
@@ -52,7 +52,7 @@ export const ConnectPlay: React.FC<ConnectPlayProps> = ({}) => {
         const copyLink = () => {
             navigator.clipboard.writeText(`${user.name} is inviting you to play Connect 4!\n${window.location.href}`)
             setShareMessage('Copied to Clipboard')
-            setTimeout(() => setShareMessage('Invite'), 5000)
+            setTimeout(() => setShareMessage('Share Game'), 5000)
         }
         try {
             navigator
@@ -227,26 +227,12 @@ const InfoSection: React.FC<InfoSectionProps> = ({ gid, game, player, shareMessa
                             sendGameInvite(opponent, 'connect', id)
                             navigate(`/play/connect/${id}`)
                         })
-                        // sendConnectChallengeInvite(gid, uid, name, player, id => navigate(`/play/connect/${id}`))
                     }}
                     className='bg-sky-500 text-white'
                 >
-                    Invite Opponent
+                    Rematch Opponent
                 </Button>
             )}
-            {/* {game !== null && player !== '' && game.challenge !== null && game.accepted === false && (
-                <Button
-                    onClick={() => {
-                        if (game === null || game.challenge === null || gid === undefined) {
-                            return
-                        }
-                        acceptConnectChallenge(gid, () => navigate(`/play/connect/${game.challenge?.code || ''}`))
-                    }}
-                    className='bg-lime-500 text-white'
-                >
-                    Accept Invite
-                </Button>
-            )} */}
             <Button
                 onClick={shareGame}
                 disabled={game === null || game.winner !== ''}
