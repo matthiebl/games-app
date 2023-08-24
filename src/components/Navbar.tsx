@@ -75,6 +75,9 @@ export const Navbar: React.FC<NavbarProps> = ({}) => {
                 <ALink href='/play/connect' className='hidden sm:block'>
                     Connect 4
                 </ALink>
+                <ALink href='/play/yahtzee' className='hidden sm:block'>
+                    Yahtzee
+                </ALink>
             </div>
             {/* Games dropdown available on small screens via hamburger */}
             <div
@@ -88,6 +91,9 @@ export const Navbar: React.FC<NavbarProps> = ({}) => {
                 <div className='w-full border-t my-1' />
                 <ALink href='/play/connect' className='py-1 px-3 hover:bg-gray-100 w-full'>
                     Connect 4
+                </ALink>
+                <ALink href='/play/yahtzee' className='py-1 px-3 hover:bg-gray-100 w-full'>
+                    Yahtzee
                 </ALink>
             </div>
 

@@ -11,6 +11,8 @@ import { ConnectPlay } from './pages/ConnectPlay'
 import { UserContext } from './context'
 import { Profile } from './pages/Profile'
 import { Stats } from './pages/Stats'
+import { YahtzeeHome } from './pages/YahtzeeHome'
+import { YahtzeePlay } from './pages/YahtzeePlay'
 
 const App = () => {
     const [userState, setUser] = React.useState<UserData | null>(null)
@@ -37,6 +39,8 @@ const App = () => {
                     <Route path='/profile/stats' element={<Stats />} />
                     <Route path='/play/connect' element={<ConnectHome />} />
                     <Route path='/play/connect/:gid' element={<ConnectPlay />} />
+                    <Route path='/play/yahtzee' element={<YahtzeeHome />} />
+                    <Route path='/play/yahtzee/:gid' element={<YahtzeePlay />} />
                     <Route path='/test' element={<TestPage />} />
                 </Routes>
             </BrowserRouter>

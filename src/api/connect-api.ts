@@ -11,12 +11,6 @@ export type ConnectGame = {
     lastColumn: number
     turn: ConnectPiece
     winner: ConnectPiece | '' | 'T'
-
-    challenge: {
-        player: ConnectPiece
-        code: string
-    } | null
-    accepted: boolean
 }
 
 type Opaque<K, T> = T & { __TYPE__: K }
@@ -48,8 +42,6 @@ export const getConnectGame = (gid: GameID, callback: (game: ConnectGame) => any
                 lastColumn: data.lastColumn,
                 turn: data.turn,
                 winner: data.winner,
-                challenge: data.challenge,
-                accepted: data.accepted,
             })
         } else {
             console.warn('[CONNECT] No game of connect with id', gid)
@@ -67,8 +59,6 @@ export const createConnectGame = (uid: UserID, name: string, callback: (id: Game
         lastColumn: -1,
         turn: '1',
         winner: '',
-        challenge: null,
-        accepted: false,
     })
         .then(doc => {
             console.info('[CONNECT] Connect game created with id', doc.id)
