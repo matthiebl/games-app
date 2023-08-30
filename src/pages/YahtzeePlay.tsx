@@ -8,7 +8,7 @@ import {
     YahtzeeGame,
     getYahtzeeGame,
     putYahtzeeAllPlayersJoined,
-    sendGameInvite,
+    putYahtzeePlayer,
 } from '../api'
 import { Button, Page } from '../components'
 import { UserContext } from '../context'
@@ -23,7 +23,6 @@ export const YahtzeePlay: React.FC<YahtzeePlayProps> = ({}) => {
     const [game, setGame] = React.useState<YahtzeeGame | null>(null)
 
     const [dice, setDice] = React.useState<Die[]>(gameDiceToPlayDice([1, 1, 1, 1, 1]))
-    const [shareMessage, setShareMessage] = React.useState<string>('Share Game')
 
     React.useEffect(() => {
         document.title = 'Games | Yahtzee'
@@ -33,10 +32,88 @@ export const YahtzeePlay: React.FC<YahtzeePlayProps> = ({}) => {
         }
         getYahtzeeGame(gid, data => {
             setGame(data)
-            setDice(gameDiceToPlayDice(data.turn.dice))
-            setPlayerIndex(getPlayerIndex(data, user.uid))
+            const index = getPlayerIndex(data, user.uid)
+            if (index === -1 && !data.playersJoined) {
+                putYahtzeePlayer(gid, user.uid, user.name)
+            }
         })
-    }, [user, gid])
+    }, [gid, user])
+
+    React.useEffect(() => {
+        if (game === null || user === null) {
+            return
+        }
+        setDice(gameDiceToPlayDice(game.turn.dice))
+        setPlayerIndex(getPlayerIndex(game, user.uid))
+    }, [game, user])
+
+    const makeTurn = () => {
+        if (user === null || game === null || gid === undefined || playerIndex !== game.turn.playerIndex) {
+            return
+        }
+    }
+
+    return (
+        <Page centered>
+            <div className='w-full max-w-4xl p-5 gap-5 flex flex-col items-center'>
+                <h1 className='text-3xl font-extrabold text-center'>Yahtzee</h1>
+                <div className='w-full gap-5 flex flex-col items-center'>
+                    <PlayersSection gid={gid} game={game} user={user} />
+                    <Dice game={game} dice={dice} />
+
+                    {/* <h3 className='text-xl w-full -mb-3 text-left'>Scorecard</h3> */}
+                    <div className='w-full flex'>
+                        <div className='flex flex-col'>
+                            {[
+                                'Scorecard',
+                                'Aces',
+                                'Twos',
+                                'Threes',
+                                'Fours',
+                                'Fives',
+                                'Sixes',
+                                'Total',
+                                'Bonus',
+                                'Upper Total',
+                                '',
+                                '3 of a Kind',
+                                '4 of a Kind',
+                                'Full House',
+                                'SM Straight',
+                                'LG Straight',
+                                'YAHTZEE',
+                                'Chance',
+                                'BONUS',
+                                'Lower Total',
+                                'Upper Total',
+                                'Grand Total',
+                            ].map(s => (
+                                <div
+                                    key={crypto.randomUUID()}
+                                    className='p-2 min-h-[40px] even:bg-gray-200 first:text-xl first:py-1.5 first:px-0 last:font-bold'
+                                >
+                                    {s}
+                                </div>
+                            ))}
+                        </div>
+                        <div className='px-2 py-1 text-center'>
+                            {/* {game !== null && user !== null && game.players[getPlayerIndex(game, user.uid)].card.bonus} */}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </Page>
+    )
+}
+
+interface PlayersSectionProps {
+    gid: GameID | undefined
+    game: YahtzeeGame | null
+    user: UserData | null
+}
+
+const PlayersSection: React.FC<PlayersSectionProps> = ({ gid, game, user }) => {
+    const [shareMessage, setShareMessage] = React.useState<string>('Share Game')
 
     const shareGame = () => {
         if (gid === undefined || user === null || game === null) {
@@ -60,64 +137,6 @@ export const YahtzeePlay: React.FC<YahtzeePlayProps> = ({}) => {
         }
     }
 
-    const makeTurn = () => {
-        if (user === null || game === null || gid === undefined || playerIndex !== game.turn.playerIndex) {
-            return
-        }
-    }
-
-    return (
-        <Page centered>
-            <div className='w-full max-w-4xl p-5 gap-5 flex flex-col items-center'>
-                <h1 className='text-3xl font-extrabold text-center'>Yahtzee</h1>
-                <div className='w-full gap-5 flex flex-col items-center'>
-                    <PlayersSection gid={gid} game={game} user={user} />
-                    <Dice game={game} dice={dice} />
-
-                    <h3 className='text-xl w-full -mb-3 text-left'>Scorecard</h3>
-                    <div className='w-full flex'>
-                        <div className=''>
-                            {[
-                                'Aces',
-                                'Twos',
-                                'Threes',
-                                'Fours',
-                                'Fives',
-                                'Sixes',
-                                'Total',
-                                'Bonus',
-                                'Upper Total',
-                                '3 of a Kind',
-                                '4 of a Kind',
-                                'Full House',
-                                'SM Straight',
-                                'LG Straight',
-                                'YAHTZEE',
-                                'Chance',
-                                'BONUS',
-                                'Lower Total',
-                                'Grand Total',
-                            ].map(s => (
-                                <div>{s}</div>
-                            ))}
-                        </div>
-                        <div className='px-2 py-1 text-center'>
-                            {game !== null && user !== null && game.players[getPlayerIndex(game, user.uid)].card}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </Page>
-    )
-}
-
-interface PlayersSectionProps {
-    gid: GameID | undefined
-    game: YahtzeeGame | null
-    user: UserData | null
-}
-
-const PlayersSection: React.FC<PlayersSectionProps> = ({ gid, game, user }) => {
     return (
         <>
             <div className='w-full flex gap-2 justify-center'>
@@ -140,6 +159,11 @@ const PlayersSection: React.FC<PlayersSectionProps> = ({ gid, game, user }) => {
                     ))
                 )}
             </div>
+            {game !== null && user !== null && !game.playersJoined && (
+                <Button onClick={shareGame} className='bg-sky-500 text-white w-full'>
+                    {shareMessage}
+                </Button>
+            )}
             {game !== null && user !== null && !game.playersJoined && getPlayerIndex(game, user.uid) === 0 && (
                 <Button
                     onClick={() => {
@@ -154,34 +178,50 @@ const PlayersSection: React.FC<PlayersSectionProps> = ({ gid, game, user }) => {
     )
 }
 
-interface DieProps {
+interface DiceProps {
     game: YahtzeeGame | null
     dice: Die[]
 }
 
-const Dice: React.FC<DieProps> = ({ game, dice }) => {
-    return (
-        <>
-            <div className='w-full py-2 px-5 flex justify-center items-center flex-wrap gap-5'>
-                {dice.map(die => (
-                    <button
-                        key={crypto.randomUUID()}
-                        className='w-16 h-16 min-w-[4rem] min-h-[4rem] flex justify-center items-center border rounded border-black'
-                    >
-                        {die.value}
-                    </button>
-                ))}
-            </div>
-            <Button
-                disabled={game === null || !game.playersJoined}
-                onClick={() => {}}
-                className='w-full bg-sky-500 text-white'
-            >
-                Roll
-            </Button>
-        </>
-    )
+const Dice: React.FC<DiceProps> = ({ game, dice }) => (
+    <>
+        <div className='w-full py-2 px-5 flex justify-center items-center flex-wrap gap-5'>
+            {dice.map(die => (
+                <button
+                    key={crypto.randomUUID()}
+                    className='relative w-16 h-16 min-w-[4rem] min-h-[4rem] flex justify-center items-center border rounded border-black'
+                >
+                    <Die value={die.value} />
+                </button>
+            ))}
+        </div>
+        <Button
+            disabled={game === null || !game.playersJoined}
+            onClick={() => {}}
+            className='w-full bg-sky-500 text-white'
+        >
+            Roll
+        </Button>
+    </>
+)
+
+interface DieProps {
+    value: DieV
 }
+
+const Die: React.FC<DieProps> = ({ value }) => (
+    <span className='absolute w-full h-full flex justify-center items-center'>
+        {[1, 3, 5].includes(value) && <span className='w-2.5 h-2.5 bg-black rounded-full' />}
+        {[4, 5, 6].includes(value) && <span className='absolute left-2.5 top-2.5 w-2.5 h-2.5 bg-black rounded-full' />}
+        {value !== 1 && <span className='absolute right-2.5 top-2.5 w-2.5 h-2.5 bg-black rounded-full' />}
+        {value !== 1 && <span className='absolute left-2.5 bottom-2.5 w-2.5 h-2.5 bg-black rounded-full' />}
+        {[4, 5, 6].includes(value) && (
+            <span className='absolute right-2.5 bottom-2.5 w-2.5 h-2.5 bg-black rounded-full' />
+        )}
+        {[6].includes(value) && <span className='absolute right-2.5 w-2.5 h-2.5 bg-black rounded-full' />}
+        {[6].includes(value) && <span className='absolute left-2.5 w-2.5 h-2.5 bg-black rounded-full' />}
+    </span>
+)
 
 // interface BoardProps {
 //     player: ConnectPiece | ''
