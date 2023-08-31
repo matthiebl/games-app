@@ -105,7 +105,7 @@ const PlayersSection: React.FC<PlayersSectionProps> = ({ gid, game, user }) => {
                     game.players.map((player, i) => (
                         <React.Fragment key={crypto.randomUUID()}>
                             <span
-                                data-user={user !== null && player.uid === user.uid}
+                                // data-user={user !== null && player.uid === user.uid}
                                 data-turn={i === game.turn.playerIndex}
                                 className='data-[user=true]:font-bold data-[turn=true]:underline'
                             >
@@ -146,6 +146,8 @@ const Dice: React.FC<DiceProps> = ({ game, dice, setDice }) => {
     const { gid } = useParams()
     const { user } = React.useContext(UserContext)
 
+    const [shaking, setShaking] = React.useState(false)
+
     const updateLockedDice = (index: number) => {
         if (game === null || game.turn.roll === 0 || game.turn.roll >= 3) {
             return
@@ -156,8 +158,13 @@ const Dice: React.FC<DiceProps> = ({ game, dice, setDice }) => {
         if (gid === undefined || user === null) {
             return
         }
-        const toKeep = dice.map((die, i) => (die.locked ? i : -1)).filter(val => val >= 0)
-        postYahtzeeRoll(gid, user.uid, toKeep)
+        setShaking(true)
+        setTimeout(() => {
+            const toKeep = dice.map((die, i) => (die.locked ? i : -1)).filter(val => val >= 0)
+            postYahtzeeRoll(gid, user.uid, toKeep, () => {
+                setShaking(false)
+            })
+        }, 820)
     }
     const rollButtonText = (): string => {
         if (game === null || user === null) {
@@ -196,9 +203,10 @@ const Dice: React.FC<DiceProps> = ({ game, dice, setDice }) => {
                     <button
                         key={crypto.randomUUID()}
                         data-locked={die.locked}
+                        data-shaking={shaking && !die.locked}
                         disabled={game === null || game.turn.roll === 0 || game.turn.roll >= 3}
                         onClick={() => updateLockedDice(index)}
-                        className='relative w-16 h-16 min-w-[4rem] min-h-[4rem] flex justify-center items-center border rounded border-black data-[locked=true]:ring data-[locked=true]:ring-red-500'
+                        className='relative w-16 h-16 min-w-[4rem] min-h-[4rem] flex justify-center items-center border rounded border-black data-[locked=true]:ring data-[locked=true]:ring-red-500 data-[shaking=true]:animate-shake'
                     >
                         <Die value={die.value} />
                     </button>
@@ -286,7 +294,7 @@ const Scorecard: React.FC<ScorecardProps> = ({ game, playerIndex }) => {
     return (
         <div className='max-w-full flex overflow-clip'>
             {/* <h3 className='text-xl w-full -mb-3 text-left'>Scorecard</h3> */}
-            <div className='flex min-w-fit flex-col border-r border-gray-200'>
+            <div className='flex min-w-fit flex-col'>
                 {[
                     'Scorecard',
                     'Aces',

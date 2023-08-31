@@ -166,7 +166,7 @@ const randomDice = (dice: number[], keepIndex: number[]): number[] => {
     return dice
 }
 
-export const postYahtzeeRoll = (gid: GameID, uid: UserID, keepIndex: number[]) => {
+export const postYahtzeeRoll = (gid: GameID, uid: UserID, keepIndex: number[], callback: () => any) => {
     const gameRef = doc(database, 'yahtzee', gid)
 
     try {
@@ -203,6 +203,8 @@ export const postYahtzeeRoll = (gid: GameID, uid: UserID, keepIndex: number[]) =
         })
     } catch (e) {
         console.error('[YAHTZEE] Rolling dice failed', e)
+    } finally {
+        callback()
     }
 }
 
