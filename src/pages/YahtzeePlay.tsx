@@ -5,12 +5,15 @@ import {
     GameID,
     UserData,
     UserID,
+    YahtzeeCard,
     YahtzeeGame,
     getYahtzeeGame,
+    postYahtzeeMove,
+    postYahtzeeRoll,
     putYahtzeeAllPlayersJoined,
     putYahtzeePlayer,
 } from '../api'
-import { Button, Page } from '../components'
+import { Button, CancelIcon, Page } from '../components'
 import { UserContext } from '../context'
 
 interface YahtzeePlayProps {}
@@ -47,59 +50,14 @@ export const YahtzeePlay: React.FC<YahtzeePlayProps> = ({}) => {
         setPlayerIndex(getPlayerIndex(game, user.uid))
     }, [game, user])
 
-    const makeTurn = () => {
-        if (user === null || game === null || gid === undefined || playerIndex !== game.turn.playerIndex) {
-            return
-        }
-    }
-
     return (
         <Page centered>
             <div className='w-full max-w-4xl p-5 gap-5 flex flex-col items-center'>
                 <h1 className='text-3xl font-extrabold text-center'>Yahtzee</h1>
                 <div className='w-full gap-5 flex flex-col items-center'>
                     <PlayersSection gid={gid} game={game} user={user} />
-                    <Dice game={game} dice={dice} />
-
-                    {/* <h3 className='text-xl w-full -mb-3 text-left'>Scorecard</h3> */}
-                    <div className='w-full flex'>
-                        <div className='flex flex-col'>
-                            {[
-                                'Scorecard',
-                                'Aces',
-                                'Twos',
-                                'Threes',
-                                'Fours',
-                                'Fives',
-                                'Sixes',
-                                'Total',
-                                'Bonus',
-                                'Upper Total',
-                                '',
-                                '3 of a Kind',
-                                '4 of a Kind',
-                                'Full House',
-                                'SM Straight',
-                                'LG Straight',
-                                'YAHTZEE',
-                                'Chance',
-                                'BONUS',
-                                'Lower Total',
-                                'Upper Total',
-                                'Grand Total',
-                            ].map(s => (
-                                <div
-                                    key={crypto.randomUUID()}
-                                    className='p-2 min-h-[40px] even:bg-gray-200 first:text-xl first:py-1.5 first:px-0 last:font-bold'
-                                >
-                                    {s}
-                                </div>
-                            ))}
-                        </div>
-                        <div className='px-2 py-1 text-center'>
-                            {/* {game !== null && user !== null && game.players[getPlayerIndex(game, user.uid)].card.bonus} */}
-                        </div>
-                    </div>
+                    <Dice game={game} dice={dice} setDice={setDice} />
+                    <Scorecard game={game} playerIndex={playerIndex} />
                 </div>
             </div>
         </Page>
@@ -149,7 +107,7 @@ const PlayersSection: React.FC<PlayersSectionProps> = ({ gid, game, user }) => {
                             <span
                                 data-user={user !== null && player.uid === user.uid}
                                 data-turn={i === game.turn.playerIndex}
-                                className='data-[user=true]:underline data-[turn=true]:font-bold'
+                                className='data-[user=true]:font-bold data-[turn=true]:underline'
                             >
                                 {user !== null && player.uid === user.uid ? 'You' : player.name}
                                 {i === 0 && ' (Host)'}
@@ -181,29 +139,87 @@ const PlayersSection: React.FC<PlayersSectionProps> = ({ gid, game, user }) => {
 interface DiceProps {
     game: YahtzeeGame | null
     dice: Die[]
+    setDice: React.Dispatch<React.SetStateAction<Die[]>>
 }
 
-const Dice: React.FC<DiceProps> = ({ game, dice }) => (
-    <>
-        <div className='w-full py-2 px-5 flex justify-center items-center flex-wrap gap-5'>
-            {dice.map(die => (
-                <button
-                    key={crypto.randomUUID()}
-                    className='relative w-16 h-16 min-w-[4rem] min-h-[4rem] flex justify-center items-center border rounded border-black'
-                >
-                    <Die value={die.value} />
-                </button>
-            ))}
-        </div>
-        <Button
-            disabled={game === null || !game.playersJoined}
-            onClick={() => {}}
-            className='w-full bg-sky-500 text-white'
-        >
-            Roll
-        </Button>
-    </>
-)
+const Dice: React.FC<DiceProps> = ({ game, dice, setDice }) => {
+    const { gid } = useParams()
+    const { user } = React.useContext(UserContext)
+
+    const updateLockedDice = (index: number) => {
+        if (game === null || game.turn.roll === 0 || game.turn.roll >= 3) {
+            return
+        }
+        setDice(dice.map(({ value, locked }, i) => ({ value, locked: i === index ? !locked : locked })))
+    }
+    const doDiceRoll = () => {
+        if (gid === undefined || user === null) {
+            return
+        }
+        const toKeep = dice.map((die, i) => (die.locked ? i : -1)).filter(val => val >= 0)
+        postYahtzeeRoll(gid, user.uid, toKeep)
+    }
+    const rollButtonText = (): string => {
+        if (game === null || user === null) {
+            return 'Loading'
+        } else if (!game.playersJoined) {
+            return 'Waiting to Start'
+        } else if (getPlayerIndex(game, user.uid) === game.turn.playerIndex) {
+            switch (game.turn.roll) {
+                case 0:
+                    return 'First Roll'
+                case 1:
+                    return 'Roll Again'
+                case 2:
+                    return 'Last Roll'
+                default:
+                    return 'Out of Rolls'
+            }
+        } else {
+            switch (game.turn.roll) {
+                case 0:
+                    return 'Roll 1'
+                case 1:
+                    return 'Roll 2'
+                case 2:
+                    return 'Roll 3'
+                default:
+                    return 'Out of Rolls'
+            }
+        }
+    }
+
+    return (
+        <>
+            <div className='w-full py-2 px-5 flex justify-center items-center flex-wrap gap-5'>
+                {dice.map((die, index) => (
+                    <button
+                        key={crypto.randomUUID()}
+                        data-locked={die.locked}
+                        disabled={game === null || game.turn.roll === 0 || game.turn.roll >= 3}
+                        onClick={() => updateLockedDice(index)}
+                        className='relative w-16 h-16 min-w-[4rem] min-h-[4rem] flex justify-center items-center border rounded border-black data-[locked=true]:ring data-[locked=true]:ring-red-500'
+                    >
+                        <Die value={die.value} />
+                    </button>
+                ))}
+            </div>
+            <Button
+                disabled={
+                    game === null ||
+                    user === null ||
+                    !game.playersJoined ||
+                    game.turn.playerIndex !== getPlayerIndex(game, user.uid) ||
+                    game.turn.roll >= 3
+                }
+                onClick={doDiceRoll}
+                className='w-full bg-sky-500 text-white'
+            >
+                {rollButtonText()}
+            </Button>
+        </>
+    )
+}
 
 interface DieProps {
     value: DieV
@@ -222,142 +238,6 @@ const Die: React.FC<DieProps> = ({ value }) => (
         {[6].includes(value) && <span className='absolute left-2.5 w-2.5 h-2.5 bg-black rounded-full' />}
     </span>
 )
-
-// interface BoardProps {
-//     player: ConnectPiece | ''
-//     game: ConnectGame | null
-//     placePiece: (column: number) => void
-// }
-
-// const Board: React.FC<BoardProps> = ({ player, game, placePiece }) => {
-//     if (game === null) {
-//         return <EmptyBoard player={player} game={game} placePiece={placePiece} />
-//     }
-
-//     return (
-//         <div className='w-full aspect-[7/6] grid items-end grid-cols-7 gap-2'>
-//             {game.board.map((column, columnIndex) => (
-//                 <button
-//                     key={crypto.randomUUID()}
-//                     data-player={player}
-//                     disabled={
-//                         game === null ||
-//                         game.turn !== player ||
-//                         game.player2 === '' ||
-//                         game.winner !== '' ||
-//                         game.board[columnIndex].length >= 6
-//                     }
-//                     onClick={() => placePiece(columnIndex)}
-//                     className='rounded-full border h-full w-full flex flex-col-reverse gap-2.5 disabled:border-gray-200 data-[player="1"]:border-red-500 data-[player="2"]:border-yellow-500 disabled:data-[player="1"]:border-gray-200 disabled:data-[player="2"]:border-gray-200'
-//                 >
-//                     {column.split('').map(piece => (
-//                         <div
-//                             key={crypto.randomUUID()}
-//                             className={classNames(
-//                                 'w-full aspect-square rounded-full',
-//                                 piece === '1' ? 'bg-red-500' : 'bg-yellow-500',
-//                                 columnIndex === game.lastColumn
-//                                     ? 'last:animate-fall last:motion-safe:animate-fall last:motion-reduce:animate-none'
-//                                     : '',
-//                             )}
-//                         />
-//                     ))}
-//                 </button>
-//             ))}
-//         </div>
-//     )
-// }
-
-// const EmptyBoard: React.FC<BoardProps> = () => (
-//     <div className='w-full aspect-[7/6] grid items-end grid-cols-7 gap-2'>
-//         {['', '', '', '', '', '', ''].map(() => (
-//             <button
-//                 key={crypto.randomUUID()}
-//                 disabled={true}
-//                 className='rounded-full border h-full w-full flex flex-col-reverse gap-3 disabled:border-gray-200'
-//             ></button>
-//         ))}
-//     </div>
-// )
-
-// const redPlayer = (player: ConnectPiece | ''): string => {
-//     if (player === '') {
-//         return 'Player 1'
-//     } else if (player === '1') {
-//         return 'You'
-//     } else {
-//         return 'Opponent'
-//     }
-// }
-
-// const yellowPlayer = (player: ConnectPiece | ''): string => {
-//     if (player === '') {
-//         return 'Player 2'
-//     } else if (player === '2') {
-//         return 'You'
-//     } else {
-//         return 'Opponent'
-//     }
-// }
-
-// interface InfoSectionProps {
-//     gid: GameID | undefined
-//     game: ConnectGame | null
-//     player: ConnectPiece | ''
-//     shareMessage: string
-//     shareGame: () => void
-// }
-
-// const InfoSection: React.FC<InfoSectionProps> = ({ gid, game, player, shareMessage, shareGame }) => {
-//     const navigate = useNavigate()
-
-//     return (
-//         <div className='flex flex-col max-w-xl w-full gap-5'>
-//             <div className='py-2 px-3 gap-3 shadow rounded-md grid grid-cols-2'>
-//                 <div className=''>
-//                     <p className='text-sm text-red-500'>{redPlayer(player)}</p>
-//                     <p>{game?.player1Name || 'Loading'}</p>
-//                 </div>
-//                 <div className='text-right'>
-//                     <p className='text-sm text-yellow-500'>{yellowPlayer(player)}</p>
-//                     <p>{game?.player2Name || 'Loading'}</p>
-//                 </div>
-//                 <div className='col-span-2 text-center font-bold'>
-//                     {game === null ? 'LOADING' : connectGameMessage(game, player)}
-//                 </div>
-//             </div>
-//             {game !== null && game.winner !== '' && player !== '' && (
-//                 <Button
-//                     onClick={() => {
-//                         if (gid === undefined || game === null) {
-//                             return
-//                         }
-//                         const uid = player === '1' ? game.player1 : game.player2
-//                         const name = player === '1' ? game.player1Name : game.player2Name
-//                         const opponent = player === '1' ? game.player2 : game.player1
-//                         createConnectGame(uid, name, id => {
-//                             sendGameInvite(opponent, 'connect', id)
-//                             navigate(`/play/connect/${id}`)
-//                         })
-//                     }}
-//                     className='bg-sky-500 text-white'
-//                 >
-//                     Rematch Opponent
-//                 </Button>
-//             )}
-//             <Button
-//                 onClick={shareGame}
-//                 disabled={game === null || game.winner !== ''}
-//                 className='bg-sky-500 text-white disabled:bg-gray-400'
-//             >
-//                 {shareMessage}
-//             </Button>
-//             <span className='-mt-3 text-sm text-gray-600'>
-//                 Invite code: {window.location.pathname.split('/').at(-1)}
-//             </span>
-//         </div>
-//     )
-// }
 
 // Returns the index of the player, else -1
 const getPlayerIndex = (game: YahtzeeGame, uid: UserID): number => {
@@ -394,8 +274,284 @@ const numberToDieV = (die: number): DieV => {
     }
 }
 
-const rollRandomDie = (): DieV => numberToDieV(Math.floor(Math.random() * 6) + 1)
-
-const rollRandomDice = (dice: Die[]): Die[] => {
-    return dice.map(({ value, locked }) => (locked ? { value, locked } : { value: rollRandomDie(), locked }))
+interface ScorecardProps {
+    game: YahtzeeGame | null
+    playerIndex: number
 }
+
+const Scorecard: React.FC<ScorecardProps> = ({ game, playerIndex }) => {
+    const { gid } = useParams()
+    const { user } = React.useContext(UserContext)
+
+    return (
+        <div className='max-w-full flex overflow-clip'>
+            {/* <h3 className='text-xl w-full -mb-3 text-left'>Scorecard</h3> */}
+            <div className='flex min-w-fit flex-col border-r border-gray-200'>
+                {[
+                    'Scorecard',
+                    'Aces',
+                    'Twos',
+                    'Threes',
+                    'Fours',
+                    'Fives',
+                    'Sixes',
+                    'Total',
+                    'Upper Bonus',
+                    'Upper Total',
+                    '',
+                    '3 of a Kind',
+                    '4 of a Kind',
+                    'Full House',
+                    'Small Straight',
+                    'Large Straight',
+                    'YAHTZEE',
+                    'Chance',
+                    'BONUS',
+                    'Lower Total',
+                    'Upper Total',
+                    'Grand Total',
+                ].map(s => (
+                    <div
+                        key={crypto.randomUUID()}
+                        className='p-2 min-h-[40px] even:bg-gray-200 first:text-xl first:py-1.5 first:px-0 last:font-bold'
+                    >
+                        {s}
+                    </div>
+                ))}
+            </div>
+            <div className='flex overflow-x-scroll'>
+                {gid !== undefined &&
+                    user !== null &&
+                    game !== null &&
+                    game.players.map(({ name, card }, index) => (
+                        <div key={crypto.randomUUID()} className='flex flex-col'>
+                            <div className='p-2 min-h-[40px] min-w-[150px] text-center even:bg-gray-200'>{name}</div>
+                            {[
+                                {
+                                    value: card.ones,
+                                    valid: game.turn.dice.includes(1),
+                                    accept: sum(game.turn.dice.filter(d => d === 1)),
+                                    submit: (b: boolean) => postYahtzeeMove(gid, user.uid, 'ones', b),
+                                },
+                                {
+                                    value: card.twos,
+                                    valid: game.turn.dice.includes(2),
+                                    accept: sum(game.turn.dice.filter(d => d === 2)),
+                                    submit: (b: boolean) => postYahtzeeMove(gid, user.uid, 'twos', b),
+                                },
+                                {
+                                    value: card.threes,
+                                    valid: game.turn.dice.includes(3),
+                                    accept: sum(game.turn.dice.filter(d => d === 3)),
+                                    submit: (b: boolean) => postYahtzeeMove(gid, user.uid, 'threes', b),
+                                },
+                                {
+                                    value: card.fours,
+                                    valid: game.turn.dice.includes(4),
+                                    accept: sum(game.turn.dice.filter(d => d === 4)),
+                                    submit: (b: boolean) => postYahtzeeMove(gid, user.uid, 'fours', b),
+                                },
+                                {
+                                    value: card.fives,
+                                    valid: game.turn.dice.includes(5),
+                                    accept: sum(game.turn.dice.filter(d => d === 5)),
+                                    submit: (b: boolean) => postYahtzeeMove(gid, user.uid, 'fives', b),
+                                },
+                                {
+                                    value: card.sixes,
+                                    valid: game.turn.dice.includes(6),
+                                    accept: sum(game.turn.dice.filter(d => d === 6)),
+                                    submit: (b: boolean) => postYahtzeeMove(gid, user.uid, 'sixes', b),
+                                },
+                                {
+                                    value: upperMinorTotal(card),
+                                    valid: null,
+                                    accept: 0,
+                                    submit: () => {},
+                                },
+                                {
+                                    value: upperMinorTotal(card) >= 63 ? 35 : null,
+                                    valid: null,
+                                    accept: 0,
+                                    submit: () => {},
+                                },
+                                {
+                                    value: upperTotal(card),
+                                    valid: null,
+                                    accept: 0,
+                                    submit: () => {},
+                                },
+                                {
+                                    value: '',
+                                    valid: null,
+                                    accept: 0,
+                                    submit: () => {},
+                                },
+                                {
+                                    value: card.triple,
+                                    valid: isTriple(game.turn.dice),
+                                    accept: sum(game.turn.dice),
+                                    submit: (b: boolean) => postYahtzeeMove(gid, user.uid, 'triple', b),
+                                },
+                                {
+                                    value: card.quadruple,
+                                    valid: isQuadruple(game.turn.dice),
+                                    accept: sum(game.turn.dice),
+                                    submit: (b: boolean) => postYahtzeeMove(gid, user.uid, 'quadruple', b),
+                                },
+                                {
+                                    value: card.fullHouse,
+                                    valid: isFullHouse(game.turn.dice),
+                                    accept: 25,
+                                    submit: (b: boolean) => postYahtzeeMove(gid, user.uid, 'fullHouse', b),
+                                },
+                                {
+                                    value: card.smallStraight,
+                                    valid: isSmallStraight(game.turn.dice),
+                                    accept: 30,
+                                    submit: (b: boolean) => postYahtzeeMove(gid, user.uid, 'smallStraight', b),
+                                },
+                                {
+                                    value: card.largeStraight,
+                                    valid: isLargeStraight(game.turn.dice),
+                                    accept: 40,
+                                    submit: (b: boolean) => postYahtzeeMove(gid, user.uid, 'largeStraight', b),
+                                },
+                                {
+                                    value: card.yahtzee,
+                                    valid: equal(game.turn.dice),
+                                    accept: 50,
+                                    submit: (b: boolean) => postYahtzeeMove(gid, user.uid, 'yahtzee', b),
+                                },
+                                {
+                                    value: card.chance,
+                                    valid: true,
+                                    accept: sum(game.turn.dice),
+                                    submit: (b: boolean) => postYahtzeeMove(gid, user.uid, 'chance', b),
+                                },
+                                {
+                                    value: card.extras,
+                                    valid: (card.yahtzee && equal(game.turn.dice)) || null,
+                                    accept: 100,
+                                    submit: (b: boolean) => postYahtzeeMove(gid, user.uid, 'extras', b),
+                                },
+                                {
+                                    value: lowerTotal(card),
+                                    valid: null,
+                                    accept: 0,
+                                    submit: () => {},
+                                },
+                                {
+                                    value: upperTotal(card),
+                                    valid: null,
+                                    accept: 0,
+                                    submit: () => {},
+                                },
+                                {
+                                    value: grandTotal(card),
+                                    valid: null,
+                                    accept: 0,
+                                    submit: () => {},
+                                },
+                            ].map(({ value, valid, accept, submit }) => (
+                                <div
+                                    key={crypto.randomUUID()}
+                                    className='p-2 min-h-[40px] justify-center even:bg-gray-200 flex gap-2'
+                                >
+                                    {value === null &&
+                                        valid === true &&
+                                        game.turn.playerIndex === playerIndex &&
+                                        game.turn.roll !== 0 &&
+                                        playerIndex === index && (
+                                            <button
+                                                onClick={() => submit(false)}
+                                                className='text-xs text-white bg-lime-500 px-2 rounded'
+                                            >
+                                                Take: {accept}
+                                            </button>
+                                        )}
+                                    {value === null &&
+                                        valid === false &&
+                                        game.turn.playerIndex === playerIndex &&
+                                        game.turn.roll !== 0 &&
+                                        playerIndex === index && (
+                                            <button
+                                                onClick={() => submit(true)}
+                                                className='text-xs text-white bg-red-500 px-0.5 rounded'
+                                            >
+                                                <CancelIcon />
+                                            </button>
+                                        )}
+                                    {value !== null && value}
+                                </div>
+                            ))}
+                        </div>
+                    ))}
+            </div>
+        </div>
+    )
+}
+
+const sum = (numbers: number[]): number => numbers.reduce((s, v) => s + v, 0)
+const equal = (numbers: number[]): boolean => numbers.map(v => v === numbers[0]).reduce((pv, v) => pv && v, true)
+const isTriple = (dice: number[]): boolean => {
+    const copy = [...dice].sort()
+    return (
+        (copy[0] === copy[1] && copy[1] === copy[2]) ||
+        (copy[1] === copy[2] && copy[2] === copy[3]) ||
+        (copy[2] === copy[3] && copy[3] === copy[4])
+    )
+}
+const isQuadruple = (dice: number[]): boolean => {
+    const copy = [...dice].sort()
+    return (
+        (copy[0] === copy[1] && copy[1] === copy[2] && copy[2] === copy[3]) ||
+        (copy[1] === copy[2] && copy[2] === copy[3] && copy[3] === copy[4])
+    )
+}
+const isFullHouse = (dice: number[]): boolean => {
+    const copy = [...dice].sort()
+    return (
+        copy[0] !== copy[4] &&
+        ((copy[0] === copy[1] && copy[1] === copy[2] && copy[3] === copy[4]) ||
+            (copy[0] === copy[1] && copy[2] === copy[3] && copy[3] === copy[4]))
+    )
+}
+const isSmallStraight = (dice: number[]): boolean => {
+    const copy = [...dice].sort()
+    const uniq = [...new Set(copy)]
+    return (
+        isLargeStraight(dice) ||
+        uniq.toString().includes([1, 2, 3, 4].toString()) ||
+        uniq.toString().includes([2, 3, 4, 5].toString()) ||
+        uniq.toString().includes([3, 4, 5, 6].toString())
+    )
+}
+const isLargeStraight = (dice: number[]): boolean => {
+    const copy = [...dice].sort()
+    const uniq = [...new Set(copy)]
+    return uniq.toString() === [1, 2, 3, 4, 5].toString() || uniq.toString() === [2, 3, 4, 5, 6].toString()
+}
+
+const upperMinorTotal = (card: YahtzeeCard): number =>
+    (card.ones || 0) + (card.twos || 0) + (card.threes || 0) + (card.fours || 0) + (card.fives || 0) + (card.sixes || 0)
+
+const upperTotal = (card: YahtzeeCard): number => {
+    const minorTotal = upperMinorTotal(card)
+    if (minorTotal >= 63) {
+        return minorTotal + 35
+    }
+    return minorTotal
+}
+
+const lowerTotal = (card: YahtzeeCard): number =>
+    (card.triple || 0) +
+    (card.quadruple || 0) +
+    (card.fullHouse || 0) +
+    (card.smallStraight || 0) +
+    (card.largeStraight || 0) +
+    (card.yahtzee || 0) +
+    (card.chance || 0) +
+    (card.bonus || 0)
+
+const grandTotal = (card: YahtzeeCard): number => upperTotal(card) + lowerTotal(card)
