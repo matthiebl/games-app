@@ -130,6 +130,7 @@ export const putYahtzeePlayer = (gid: GameID, uid: UserID, name: string) => {
                 const find = data.players.filter((player: YahtzeePlayer) => player.uid === uid)
                 if (!data.playersJoined && find.length === 0) {
                     transaction.update(gameRef, { players: [...data.players, newPlayer(uid, name)] })
+                    addGame(uid, 'yahtzee', gid)
                 }
             }
         })
@@ -185,7 +186,8 @@ export const postYahtzeeRoll = (gid: GameID, uid: UserID, keepIndex: number[], c
                     !game.playersJoined ||
                     playerIndex === -1 ||
                     playerIndex !== game.turn.playerIndex ||
-                    game.turn.roll >= 3
+                    game.turn.roll >= 3 ||
+                    game.winner !== -1
                 ) {
                     return
                 }
@@ -323,6 +325,27 @@ export const postYahtzeeMove = (gid: GameID, uid: UserID, option: YahtzeeMove, s
                 } else if (option === 'chance') {
                     game.players[playerIndex].card.chance = scratch ? 0 : worth
                 }
+
+                let winner = -1
+                if (
+                    game.players[playerIndex].card.ones !== null &&
+                    game.players[playerIndex].card.twos !== null &&
+                    game.players[playerIndex].card.threes !== null &&
+                    game.players[playerIndex].card.fours !== null &&
+                    game.players[playerIndex].card.fives !== null &&
+                    game.players[playerIndex].card.sixes !== null &&
+                    game.players[playerIndex].card.triple !== null &&
+                    game.players[playerIndex].card.quadruple !== null &&
+                    game.players[playerIndex].card.fullHouse !== null &&
+                    game.players[playerIndex].card.smallStraight !== null &&
+                    game.players[playerIndex].card.largeStraight !== null &&
+                    game.players[playerIndex].card.yahtzee !== null &&
+                    game.players[playerIndex].card.chance !== null &&
+                    playerIndex === game.players.length - 1
+                ) {
+                    const scores = game.players.map(player => grandTotal(player.card))
+                    winner = scores.indexOf(Math.max(...scores))
+                }
                 console.log('[YAHTZEE] Updating card to', game.players[playerIndex].card)
                 transaction.update(gameRef, {
                     players: game.players,
@@ -331,6 +354,7 @@ export const postYahtzeeMove = (gid: GameID, uid: UserID, option: YahtzeeMove, s
                         roll: 0,
                         dice: game.turn.dice,
                     },
+                    winner,
                 })
             }
         })
@@ -338,3 +362,26 @@ export const postYahtzeeMove = (gid: GameID, uid: UserID, option: YahtzeeMove, s
         console.error('[YAHTZEE] Making move failed', e)
     }
 }
+
+const upperMinorTotal = (card: YahtzeeCard): number =>
+    (card.ones || 0) + (card.twos || 0) + (card.threes || 0) + (card.fours || 0) + (card.fives || 0) + (card.sixes || 0)
+
+const upperTotal = (card: YahtzeeCard): number => {
+    const minorTotal = upperMinorTotal(card)
+    if (minorTotal >= 63) {
+        return minorTotal + 35
+    }
+    return minorTotal
+}
+
+const lowerTotal = (card: YahtzeeCard): number =>
+    (card.triple || 0) +
+    (card.quadruple || 0) +
+    (card.fullHouse || 0) +
+    (card.smallStraight || 0) +
+    (card.largeStraight || 0) +
+    (card.yahtzee || 0) +
+    (card.chance || 0) +
+    (card.bonus || 0)
+
+const grandTotal = (card: YahtzeeCard): number => upperTotal(card) + lowerTotal(card)

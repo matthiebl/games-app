@@ -105,12 +105,13 @@ const PlayersSection: React.FC<PlayersSectionProps> = ({ gid, game, user }) => {
                     game.players.map((player, i) => (
                         <React.Fragment key={crypto.randomUUID()}>
                             <span
-                                // data-user={user !== null && player.uid === user.uid}
-                                data-turn={i === game.turn.playerIndex}
-                                className='data-[user=true]:font-bold data-[turn=true]:underline'
+                                data-winner={i === game.winner}
+                                data-turn={game.winner === -1 && i === game.turn.playerIndex}
+                                className='data-[winner=true]:bg-lime-500 data-[winner=true]:text-white data-[winner=true]:px-2 data-[turn=true]:bg-sky-500 data-[turn=true]:text-white data-[turn=true]:px-2 rounded-full'
                             >
                                 {user !== null && player.uid === user.uid ? 'You' : player.name}
-                                {i === 0 && ' (Host)'}
+                                {i === 0 && game.winner === -1 && ' (Host)'}
+                                {i === game.winner && ' (Winner)'}
                             </span>
                             <span className='last:hidden'>•</span>
                         </React.Fragment>
@@ -171,6 +172,8 @@ const Dice: React.FC<DiceProps> = ({ game, dice, setDice }) => {
             return 'Loading'
         } else if (!game.playersJoined) {
             return 'Waiting to Start'
+        } else if (game.winner !== -1) {
+            return 'Game Over'
         } else if (getPlayerIndex(game, user.uid) === game.turn.playerIndex) {
             switch (game.turn.roll) {
                 case 0:
@@ -216,6 +219,7 @@ const Dice: React.FC<DiceProps> = ({ game, dice, setDice }) => {
                 disabled={
                     game === null ||
                     user === null ||
+                    game.winner !== -1 ||
                     !game.playersJoined ||
                     game.turn.playerIndex !== getPlayerIndex(game, user.uid) ||
                     game.turn.roll >= 3

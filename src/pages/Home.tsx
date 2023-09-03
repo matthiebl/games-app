@@ -14,6 +14,9 @@ export const Home: React.FC<HomeProps> = ({}) => {
                 <Button onClick={() => navigate('/play/connect')} className='bg-sky-500 text-white'>
                     Play Connect 4
                 </Button>
+                <Button onClick={() => navigate('/play/yahtzee')} className='bg-sky-500 text-white'>
+                    Play Yahtzee
+                </Button>
             </div>
         </Page>
     )
