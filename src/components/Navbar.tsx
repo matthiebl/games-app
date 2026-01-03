@@ -1,7 +1,7 @@
 import React from 'react'
 import { ALink, HamburgerIcon, MailIcon } from '.'
-import { UserContext } from '../context'
 import { acceptGameInvite } from '../api'
+import { UserContext } from '../context'
 
 interface NavbarProps {}
 
@@ -81,6 +81,9 @@ export const Navbar: React.FC<NavbarProps> = ({}) => {
                 <ALink href='/play/battleship' className='hidden sm:block text-sm'>
                     Battleship
                 </ALink>
+                <ALink href='/play/pieray' className='hidden sm:block text-sm'>
+                    Pie Ray
+                </ALink>
             </div>
             {/* Games dropdown available on small screens via hamburger */}
             <div
@@ -100,6 +103,9 @@ export const Navbar: React.FC<NavbarProps> = ({}) => {
                 </ALink>
                 <ALink href='/play/battleship' className='py-1 px-3 hover:bg-gray-100 w-full'>
                     Battleship
+                </ALink>
+                <ALink href='/play/pieray' className='py-1 px-3 hover:bg-gray-100 w-full'>
+                    Pie Ray
                 </ALink>
             </div>
 

@@ -1,6 +1,6 @@
 import React from 'react'
-import { Button, Page } from '../components'
 import { useNavigate } from 'react-router-dom'
+import { Button, Page } from '../components'
 
 interface HomeProps {}
 
@@ -19,6 +19,9 @@ export const Home: React.FC<HomeProps> = ({}) => {
                 </Button>
                 <Button onClick={() => navigate('/play/battleship')} className='bg-sky-500 text-white'>
                     Play Battleship
+                </Button>
+                <Button onClick={() => navigate('/play/pieray')} className='bg-sky-500 text-white'>
+                    Play Pie Ray
                 </Button>
             </div>
         </Page>

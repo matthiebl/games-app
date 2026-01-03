@@ -5,16 +5,17 @@ import { onAuthStateChanged } from 'firebase/auth'
 import { UserData, anonLogin, auth, getUserDetails } from './api'
 import { UserContext } from './context'
 
-import { TestPage } from './pages/TestPage'
-import { Home } from './pages/Home'
-import { ConnectHome } from './pages/ConnectHome'
-import { ConnectPlay } from './pages/ConnectPlay'
-import { Profile } from './pages/Profile'
-import { Stats } from './pages/Stats'
-import { YahtzeeHome } from './pages/YahtzeeHome'
-import { YahtzeePlay } from './pages/YahtzeePlay'
 import { BattleshipHome } from './pages/BattleshipHome'
 import { BattleshipPlay } from './pages/BattleshipPlay'
+import { ConnectHome } from './pages/ConnectHome'
+import { ConnectPlay } from './pages/ConnectPlay'
+import { Home } from './pages/Home'
+import { PieRayPlay } from './pages/PieRayPlay'
+import { Profile } from './pages/Profile'
+import { Stats } from './pages/Stats'
+import { TestPage } from './pages/TestPage'
+import { YahtzeeHome } from './pages/YahtzeeHome'
+import { YahtzeePlay } from './pages/YahtzeePlay'
 
 const App = () => {
     const [userState, setUser] = React.useState<UserData | null>(null)
@@ -45,6 +46,7 @@ const App = () => {
                     <Route path='/play/yahtzee/:gid' element={<YahtzeePlay />} />
                     <Route path='/play/battleship' element={<BattleshipHome />} />
                     <Route path='/play/battleship/:gid' element={<BattleshipPlay />} />
+                    <Route path='/play/pieray' element={<PieRayPlay />} />
                     <Route path='/test' element={<TestPage />} />
                 </Routes>
             </BrowserRouter>
