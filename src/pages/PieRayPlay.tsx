@@ -1,4 +1,5 @@
 import React from 'react'
+import steveImg from '../assets/steve.jpg'
 import { classNames, Page } from '../components'
 
 import { ArcElement, Chart as ChartJS, Legend, Tooltip } from 'chart.js'
@@ -185,7 +186,7 @@ const BoardCell: React.FC<BoardCellProps> = ({ x, y, player, fortress, render })
                 isFortress && 'bg-red-500',
             )}
         >
-            {isPlayer ? <img src='/assets/steve.jpg' /> : null}
+            {isPlayer ? <img src={steveImg} /> : null}
         </div>
     )
 }
