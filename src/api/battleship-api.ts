@@ -1,5 +1,5 @@
 import { addDoc, collection, doc, onSnapshot, updateDoc } from 'firebase/firestore'
-import { GameID, UserData, UserID, addGame, addGameWin, database } from '.'
+import { GameID, UserID, addGame, database } from '.'
 
 export type BattleshipPlayerData = {
     uid: UserID
@@ -82,7 +82,7 @@ export const createBattleshipGame = (uid: UserID, name: string, callback: (id: G
         winner: '',
     })
         .then(doc => {
-            console.info('[BATTLESHIP] Battlehip game created with id', doc.id)
+            console.info('[BATTLESHIP] Battleship game created with id', doc.id)
             addGame(uid, 'battleship', doc.id)
             callback(doc.id)
         })
@@ -108,6 +108,7 @@ export const joinAsSecondPlayerToBattleshipGame = (gid: GameID, uid: UserID, nam
 
 export const placeBattleshipShips = (gid: GameID, uid: UserID, game: BattleshipGame, ships: Ship[]) => {
     // const update = player ===
+    console.log(uid, game, ships)
     updateDoc(doc(database, 'battleship', gid), {}).catch(error => {
         const errorCode = error.code
         const errorMessage = error.message
