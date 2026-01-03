@@ -60,7 +60,7 @@ export const Navbar: React.FC<NavbarProps> = ({}) => {
     return (
         <nav className='h-14 min-h-[56px] border-b bg-white px-4 items-center flex justify-between z-40'>
             {/* Games menu */}
-            <div className='flex items-end gap-4'>
+            <div className='flex items-center gap-4'>
                 <button
                     disabled={user === null}
                     onClick={toggleGameMenu}
@@ -72,11 +72,14 @@ export const Navbar: React.FC<NavbarProps> = ({}) => {
                 <ALink href='/' className='px-1 items-center gap-2 hidden sm:flex'>
                     <h2 className='text-xl font-bold'>Games</h2>
                 </ALink>
-                <ALink href='/play/connect' className='hidden sm:block'>
+                <ALink href='/play/connect' className='hidden sm:block text-sm'>
                     Connect 4
                 </ALink>
-                <ALink href='/play/yahtzee' className='hidden sm:block'>
+                <ALink href='/play/yahtzee' className='hidden sm:block text-sm'>
                     Yahtzee
+                </ALink>
+                <ALink href='/play/battleship' className='hidden sm:block text-sm'>
+                    Battleship
                 </ALink>
             </div>
             {/* Games dropdown available on small screens via hamburger */}
@@ -94,6 +97,9 @@ export const Navbar: React.FC<NavbarProps> = ({}) => {
                 </ALink>
                 <ALink href='/play/yahtzee' className='py-1 px-3 hover:bg-gray-100 w-full'>
                     Yahtzee
+                </ALink>
+                <ALink href='/play/battleship' className='py-1 px-3 hover:bg-gray-100 w-full'>
+                    Battleship
                 </ALink>
             </div>
 
