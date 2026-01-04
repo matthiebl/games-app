@@ -21,6 +21,17 @@ const COORD_RANGE = [
     14, 15, 16,
 ]
 
+const allCoords = (): Coordinate[] => {
+    const list = []
+    for (let x of COORD_RANGE) {
+        for (let y of COORD_RANGE) {
+            list.push({ x, y })
+        }
+    }
+    return list
+}
+const INITIAL_POSSIBLE = allCoords().filter(p => !(-2 <= p.x && p.x <= 2 && -2 <= p.y && p.y <= 2))
+
 const CONTROLS = [
     { name: 'Move', key: 'WASD' },
     { name: 'Open/Close Pie Chart', key: 'Shift + 3' },
@@ -31,6 +42,16 @@ const CONTROLS = [
 const renderDistTo = (player: Coordinate, pos: Coordinate) =>
     Math.max(Math.abs(player.x - pos.x), Math.abs(player.y - pos.y))
 
+const coordsInRender = (player: Coordinate, render: number): Coordinate[] => {
+    const list = []
+    for (let pos of allCoords()) {
+        if (renderDistTo(player, pos) <= render) {
+            list.push(pos)
+        }
+    }
+    return list
+}
+
 interface PieRayPlayProps {}
 
 export const PieRayPlay: React.FC<PieRayPlayProps> = ({}) => {
@@ -39,6 +60,7 @@ export const PieRayPlay: React.FC<PieRayPlayProps> = ({}) => {
     const [render, setRender] = React.useState(MIN_RENDER)
     const [pie, setPie] = React.useState(false)
     const [pieFortress, setPieFortress] = React.useState(false)
+    const [possible, setPossible] = React.useState([...INITIAL_POSSIBLE])
 
     React.useEffect(() => {
         document.title = 'Games | Pie Ray'
@@ -67,6 +89,23 @@ export const PieRayPlay: React.FC<PieRayPlayProps> = ({}) => {
         }
     }, [pie, distToFortress, render])
 
+    // Update possible fortress chunks list
+    React.useEffect(() => {
+        setPossible(prev => {
+            if (pie) {
+                if (pieFortress) {
+                    if (render == distToFortress) {
+                        return prev.filter(p => renderDistTo(player, p) == render)
+                    }
+                } else if (render != distToFortress) {
+                    const withinRender = coordsInRender(player, render)
+                    return prev.filter(p => !withinRender.some(pp => p.x == pp.x && p.y == pp.y))
+                }
+            }
+            return prev
+        })
+    }, [player, pie, pieFortress, render, distToFortress])
+
     // Handle keyboard controls
     const onKeyPress = React.useCallback((event: KeyboardEvent) => {
         const key = event.key.toLowerCase()
@@ -90,7 +129,7 @@ export const PieRayPlay: React.FC<PieRayPlayProps> = ({}) => {
             <div className='w-full max-w-7xl p-5 gap-5 flex flex-col items-center minecraft-text'>
                 <h1 className='text-3xl font-extrabold text-center'>Fortress Pie Ray</h1>
                 <div className='flex gap-5 items-center'>
-                    <Board player={player} fortress={fortress} render={render} />
+                    <Board player={player} fortress={fortress} render={render} possible={possible} />
                     <div className='h-full flex flex-col justify-between'>
                         <div>
                             <h3 className='text-xl font-bold'>Controls</h3>
@@ -143,9 +182,10 @@ interface BoardProps {
     player: Coordinate
     fortress: Coordinate
     render: number
+    possible: Coordinate[]
 }
 
-const Board: React.FC<BoardProps> = ({ player, fortress, render }) => {
+const Board: React.FC<BoardProps> = ({ player, fortress, render, possible }) => {
     return (
         <div className='max-w-3xl border border-gray-200 w-full aspect-square grid grid-cols-[repeat(33,_minmax(0,_1fr))]'>
             {COORD_RANGE.map(x => (
@@ -153,11 +193,11 @@ const Board: React.FC<BoardProps> = ({ player, fortress, render }) => {
                     {COORD_RANGE.map(y => (
                         <BoardCell
                             key={`x-${x},y-${y}`}
-                            x={x}
-                            y={y}
+                            cell={{ x, y }}
                             player={player}
                             fortress={fortress}
                             render={render}
+                            isPotential={possible.some(p => p.x == x && p.y == y)}
                         />
                     ))}
                 </div>
@@ -167,14 +207,14 @@ const Board: React.FC<BoardProps> = ({ player, fortress, render }) => {
 }
 
 interface BoardCellProps {
-    x: number
-    y: number
+    cell: Coordinate
     player: Coordinate
     fortress: Coordinate
     render: number
+    isPotential: boolean
 }
 
-const BoardCell: React.FC<BoardCellProps> = ({ x, y, player, fortress, render }) => {
+const BoardCell: React.FC<BoardCellProps> = ({ cell: { x, y }, player, fortress, render, isPotential }) => {
     const isPlayer = x == player.x && y == player.y
     const isFortress = x == fortress.x && y == fortress.y
     const isInRender = renderDistTo(player, { x: x, y: y }) <= render
@@ -182,8 +222,9 @@ const BoardCell: React.FC<BoardCellProps> = ({ x, y, player, fortress, render })
         <div
             className={classNames(
                 'border h-full w-full aspect-square border-gray-200',
-                isInRender && 'bg-green-100',
                 isFortress && 'bg-red-500',
+                isPotential && 'ring-inset ring-red-200 ring-1',
+                isInRender && 'bg-green-100',
             )}
         >
             {isPlayer ? <img src={steveImg} /> : null}
